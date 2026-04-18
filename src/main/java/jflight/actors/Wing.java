@@ -107,6 +107,8 @@ public class Wing {
 
 			// 翼速度の単位ベクトルを求める(機体座標)
 
+			if (vv < 1e-6)
+				vv = 1e-6;
 			m_ti.x = m_vp.x / vv;
 			m_ti.y = m_vp.y / vv;
 			m_ti.z = m_vp.z / vv;
@@ -136,12 +138,14 @@ public class Wing {
 			m_ni.z = m_wz.z * rr - m_vp2.z * dz;
 
 			vv = m_ni.abs();
+			if (vv < 1e-6)
+				vv = 1e-6;
 
 			m_ni.consInv(vv);
 
 			// 迎角を求める
 
-			at = -Math.atan(dz / dy);
+			at = -Math.atan2(dz, dy);
 			if (no == 0)
 				plane.aoa = at;
 

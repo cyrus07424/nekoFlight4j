@@ -101,6 +101,8 @@ public class CVector3 {
 	}
 
 	public CVector3 consInv(double c) {
+		if (Math.abs(c) < 1e-9)
+			return this;
 		x /= c;
 		y /= c;
 		z /= c;
@@ -115,6 +117,12 @@ public class CVector3 {
 	}
 
 	public CVector3 setConsInv(CVector3 a, double c) {
+		if (Math.abs(c) < 1e-9) {
+			x = 0;
+			y = 0;
+			z = 0;
+			return this;
+		}
 		x = a.x / c;
 		y = a.y / c;
 		z = a.z / c;

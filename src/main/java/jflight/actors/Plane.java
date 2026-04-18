@@ -151,6 +151,11 @@ public class Plane {
 		stickVel.set(0, 0, 0);
 		stickR = 0.1;
 		stickA = 0.1;
+		gunTarget = -1;
+		targetSx = -1000;
+		targetSy = 0;
+		targetDis = 0;
+		gunTime = 1.0;
 
 		double wa = 45 * Math.PI / 180;
 		double wa2 = 0 * Math.PI / 180;
@@ -233,6 +238,17 @@ public class Plane {
 			iMass.x += wing[i].mass * (Math.abs(wing[i].pVel.x) + 1) * m_i * m_i;
 			iMass.y += wing[i].mass * (Math.abs(wing[i].pVel.y) + 1) * m_i * m_i;
 			iMass.z += wing[i].mass * (Math.abs(wing[i].pVel.z) + 1) * m_i * m_i;
+		}
+
+		for (i = 0; i < BMAX; i++) {
+			bullet[i].use = 0;
+			bullet[i].bom = 0;
+		}
+		for (i = 0; i < MMMAX; i++) {
+			aam[i].use = -1;
+			aam[i].bom = 0;
+			aam[i].count = 0;
+			aamTarget[i] = -1;
 		}
 	}
 
@@ -403,7 +419,7 @@ public class Plane {
 
 		// 機銃の目標（主目標）は、最も近い敵機にセット
 		gunTarget = nno[0];
-		targetDis = Math.sqrt(dis[0]);
+		targetDis = dis[0] < 1e20 ? Math.sqrt(dis[0]) : 0.0;
 	}
 
 	// 機体を動かす
@@ -447,14 +463,18 @@ public class Plane {
 			stickVel.y = -1;
 		if (world.keyRight)
 			stickVel.y = 1;
+		if (world.keyRudderLeft)
+			stickVel.z = -1;
+		if (world.keyRudderRight)
+			stickVel.z = 1;
+
+		stickPos.addCons(stickVel, stickA);
+		stickPos.subCons(stickPos, stickR);
 
 		if (stickPos.z > 1)
 			stickPos.z = 1;
 		if (stickPos.z < -1)
 			stickPos.z = -1;
-
-		stickPos.addCons(stickVel, stickA);
-		stickPos.subCons(stickPos, stickR);
 
 		// スティック位置を距離１以内に丸めておく
 
@@ -511,7 +531,7 @@ public class Plane {
 		wing[1].bAngle = 0;
 		wing[2].aAngle = -stickPos.x * 6 / 180 * Math.PI;
 		wing[2].bAngle = 0;
-		wing[3].aAngle = stickPos.z * 6 / 180 * Math.PI;
+		wing[3].aAngle = stickPos.z * Commons.RUDDER_DEFLECTION_DEG / 180 * Math.PI;
 		wing[3].bAngle = 0;
 		wing[4].aAngle = 0;
 		wing[4].bAngle = 0;
@@ -627,7 +647,7 @@ public class Plane {
 		// 地面にある程度以上の速度か、無理な体勢で接触した場合、機体を初期化
 		if (height < 5
 				&& (Math.abs(vpVel.z) > 50 || Math.abs(aVel.y) > 20 * Math.PI / 180 || aVel.x > 10 * Math.PI / 180)) {
-			posInit();
+			world.resetStagePreserveUi();
 		}
 	}
 
