@@ -1,6 +1,7 @@
 package jflight.actors;
 
 import jflight.constants.Commons;
+import jflight.constants.Configurations;
 import jflight.mains.Jflight;
 import jflight.utils.CVector3;
 
@@ -12,13 +13,6 @@ import jflight.utils.CVector3;
 //
 
 public class Plane {
-
-	// 定数
-
-	final static public int BMAX = 20; // 弾丸の最大数
-	final static public int MMMAX = 4; // ミサイルの最大数
-	final static public int WMAX = 6; // 翼の数
-	final static public int MAXT = 50; // 機銃の最大温度
 
 	// 変数
 
@@ -100,19 +94,19 @@ public class Plane {
 		stickPos = new CVector3();
 		stickVel = new CVector3();
 
-		bullet = new Bullet[BMAX];
-		for (int i = 0; i < BMAX; i++)
+		bullet = new Bullet[Configurations.PLANE_BMAX];
+		for (int i = 0; i < Configurations.PLANE_BMAX; i++)
 			bullet[i] = new Bullet();
 
-		aam = new Missile[MMMAX];
-		for (int i = 0; i < MMMAX; i++)
+		aam = new Missile[Configurations.PLANE_MMMAX];
+		for (int i = 0; i < Configurations.PLANE_MMMAX; i++)
 			aam[i] = new Missile();
 
-		wing = new Wing[WMAX];
-		for (int i = 0; i < WMAX; i++)
+		wing = new Wing[Configurations.PLANE_WMAX];
+		for (int i = 0; i < Configurations.PLANE_WMAX; i++)
 			wing[i] = new Wing();
 
-		aamTarget = new int[MMMAX];
+		aamTarget = new int[Configurations.PLANE_MMMAX];
 
 		posInit();
 	}
@@ -230,7 +224,7 @@ public class Plane {
 		mass = 0;
 		iMass.set(1000, 1000, 4000);
 		double m_i = 1;
-		for (i = 0; i < WMAX; i++) {
+		for (i = 0; i < Configurations.PLANE_WMAX; i++) {
 			mass += wing[i].mass;
 			wing[i].aAngle = 0;
 			wing[i].bAngle = 0;
@@ -240,11 +234,11 @@ public class Plane {
 			iMass.z += wing[i].mass * (Math.abs(wing[i].pVel.z) + 1) * m_i * m_i;
 		}
 
-		for (i = 0; i < BMAX; i++) {
+		for (i = 0; i < Configurations.PLANE_BMAX; i++) {
 			bullet[i].use = 0;
 			bullet[i].bom = 0;
 		}
-		for (i = 0; i < MMMAX; i++) {
+		for (i = 0; i < Configurations.PLANE_MMMAX; i++) {
 			aam[i].use = -1;
 			aam[i].bom = 0;
 			aam[i].count = 0;
@@ -357,15 +351,15 @@ public class Plane {
 	public void lockCheck(Jflight world) {
 		CVector3 a = new CVector3();
 		CVector3 b = new CVector3();
-		int nno[] = new int[MMMAX]; // 機体No.
-		double dis[] = new double[MMMAX]; // 機体と自機との距離
+		int nno[] = new int[Configurations.PLANE_MMMAX]; // 機体No.
+		double dis[] = new double[Configurations.PLANE_MMMAX]; // 機体と自機との距離
 
-		for (int m = 0; m < MMMAX; m++) {
+		for (int m = 0; m < Configurations.PLANE_MMMAX; m++) {
 			dis[m] = 1e30;
 			nno[m] = -1;
 		}
 
-		for (int m = 0; m < Commons.PMAX; m++) {
+		for (int m = 0; m < Configurations.PMAX; m++) {
 
 			// 目標が存在していればロックリストに追加
 			if (m != no && world.plane[m].use) {
@@ -383,9 +377,9 @@ public class Plane {
 					if (b.y <= 0 && Math.sqrt(b.x * b.x + b.z * b.z) < -b.y * 0.24) {
 
 						// 既にロックされているのなら、他のロックと近い順に置き換える
-						for (int m1 = 0; m1 < MMMAX; m1++) {
+						for (int m1 = 0; m1 < Configurations.PLANE_MMMAX; m1++) {
 							if (near_dis < dis[m1]) {
-								for (int m2 = MMMAX - 1; m2 > m1; m2--) {
+								for (int m2 = Configurations.PLANE_MMMAX - 1; m2 > m1; m2--) {
 									dis[m2] = dis[m2 - 1];
 									nno[m2] = nno[m2 - 1];
 								}
@@ -409,12 +403,12 @@ public class Plane {
 
 		// ４以降のミサイルは、同一ポッドのミサイルに合わせる
 
-		for (int m1 = 4; m1 < MMMAX; m1++) {
+		for (int m1 = 4; m1 < Configurations.PLANE_MMMAX; m1++) {
 			nno[m1] = nno[m1 % 4];
 			dis[m1] = dis[m1 % 4];
 		}
 
-		for (int m1 = 0; m1 < MMMAX; m1++)
+		for (int m1 = 0; m1 < Configurations.PLANE_MMMAX; m1++)
 			aamTarget[m1] = nno[m1];
 
 		// 機銃の目標（主目標）は、最も近い敵機にセット
@@ -531,7 +525,7 @@ public class Plane {
 		wing[1].bAngle = 0;
 		wing[2].aAngle = -stickPos.x * 6 / 180 * Math.PI;
 		wing[2].bAngle = 0;
-		wing[3].aAngle = stickPos.z * Commons.RUDDER_DEFLECTION_DEG / 180 * Math.PI;
+		wing[3].aAngle = stickPos.z * Configurations.RUDDER_DEFLECTION_DEG / 180 * Math.PI;
 		wing[3].bAngle = 0;
 		wing[4].aAngle = 0;
 		wing[4].bAngle = 0;
@@ -555,7 +549,7 @@ public class Plane {
 		// 各翼に働く力とモーメントを計算
 
 		aoa = 0;
-		for (int m = 0; m < WMAX; m++) {
+		for (int m = 0; m < Configurations.PLANE_WMAX; m++) {
 			wing[m].calc(this, ve, m, boost);
 
 			// 力
@@ -740,7 +734,7 @@ public class Plane {
 		// 主目標として選ばれているのなら、機銃を撃つ
 		if (gunTarget == target && gunTime < 1) {
 			// 機銃がオーバーヒートしている場合、温度が下がるまで待つ
-			if (!heatWait && gunTemp < MAXT - 1)
+			if (!heatWait && gunTemp < Configurations.PLANE_MAXT - 1)
 				gunShoot = true;
 			else
 				heatWait = true;
@@ -843,14 +837,14 @@ public class Plane {
 
 		// 弾丸移動
 
-		for (i = 0; i < BMAX; i++)
+		for (i = 0; i < Configurations.PLANE_BMAX; i++)
 			if (bullet[i].use != 0)
 				bullet[i].move(world, this);
 
 		// 弾丸発射処理
 
-		if (gunShoot && gunTemp++ < Plane.MAXT) {
-			for (i = 0; i < BMAX; i++) {
+		if (gunShoot && gunTemp++ < Configurations.PLANE_MAXT) {
+			for (i = 0; i < Configurations.PLANE_BMAX; i++) {
 				if (bullet[i].use == 0) {
 					bullet[i].vVel.setPlus(vpVel, oi);
 					aa = Math.random();
@@ -873,7 +867,7 @@ public class Plane {
 		CVector3 ni = new CVector3();
 		CVector3 oi = new CVector3();
 
-		for (int k = 0; k < MMMAX; k++) {
+		for (int k = 0; k < Configurations.PLANE_MMMAX; k++) {
 
 			// 各ミサイル移動
 			if (aam[k].use > 0) {
@@ -893,11 +887,11 @@ public class Plane {
 			// 使われていないミサイルを探す
 
 			int k;
-			for (k = 0; k < MMMAX; k++)
+			for (k = 0; k < Configurations.PLANE_MMMAX; k++)
 				if (aam[k].use < 0 && aamTarget[k] >= 0)
 					break;
 
-			if (k != MMMAX) {
+			if (k != Configurations.PLANE_MMMAX) {
 				Missile ap = aam[k];
 
 				//  発射位置を決める

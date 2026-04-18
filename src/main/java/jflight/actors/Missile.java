@@ -1,6 +1,7 @@
 package jflight.actors;
 
 import jflight.constants.Commons;
+import jflight.constants.Configurations;
 import jflight.mains.Jflight;
 import jflight.utils.CVector3;
 
@@ -10,10 +11,6 @@ import jflight.utils.CVector3;
 //
 
 public class Missile {
-
-	// 定数
-
-	public static final int MOMAX = 50; // 煙の長さの最大値
 
 	// 変数
 
@@ -36,8 +33,8 @@ public class Missile {
 		vpVel = new CVector3();
 		aVel = new CVector3();
 
-		opVel = new CVector3[MOMAX];
-		for (int i = 0; i < MOMAX; i++)
+		opVel = new CVector3[Configurations.MISSILE_MOMAX];
+		for (int i = 0; i < Configurations.MISSILE_MOMAX; i++)
 			opVel[i] = new CVector3();
 
 		m_a0 = new CVector3();
@@ -149,7 +146,7 @@ public class Missile {
 		calcMotor(world, plane);
 
 		// リングバッファに位置を保存
-		opVel[use % MOMAX].set(pVel);
+		opVel[use % Configurations.MISSILE_MOMAX].set(pVel);
 
 		// ミサイル移動
 		pVel.addCons(vpVel, Commons.DT);
@@ -179,7 +176,7 @@ public class Missile {
 		}
 
 		// リングバッファ長（煙の長さ）を設定
-		if (count < MOMAX)
+		if (count < Configurations.MISSILE_MOMAX)
 			count++;
 	}
 

@@ -11,6 +11,7 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
 
+import jflight.constants.Configurations;
 import jflight.actors.Plane;
 import jflight.constants.Commons;
 import jflight.utils.CVector3;
@@ -117,7 +118,7 @@ public class Applet3D extends JPanel {
 		double z1 = x * plane.y20 + y * plane.y21 + z * plane.y22;
 
 		if (y1 > 10) {
-			double perspective = Commons.CAMERA_SCALE / (y1 / 10.0);
+			double perspective = Configurations.CAMERA_SCALE / (y1 / 10.0);
 			cp.x = x1 * perspective + sCenterX;
 			cp.y = -z1 * perspective + sCenterY;
 			cp.z = y1 * 10;

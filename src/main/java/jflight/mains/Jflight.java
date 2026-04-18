@@ -18,6 +18,8 @@ import jflight.actors.Bullet;
 import jflight.actors.Missile;
 import jflight.actors.Plane;
 import jflight.constants.Commons;
+import jflight.constants.Configurations;
+import jflight.constants.DrawScales;
 import jflight.swing.Applet3D;
 import jflight.utils.CVector3;
 
@@ -67,13 +69,13 @@ public class Jflight extends Applet3D implements Runnable {
 	private boolean prevMenuDown = false;
 
 	public Jflight() {
-		plane = new Plane[Commons.PMAX];
-		for (int i = 0; i < Commons.PMAX; i++)
+		plane = new Plane[Configurations.PMAX];
+		for (int i = 0; i < Configurations.PMAX; i++)
 			plane[i] = new Plane();
 
-		pos = new CVector3[Commons.GSCALE][Commons.GSCALE];
-		for (int j = 0; j < Commons.GSCALE; j++)
-			for (int i = 0; i < Commons.GSCALE; i++)
+		pos = new CVector3[Configurations.GSCALE][Configurations.GSCALE];
+		for (int j = 0; j < Configurations.GSCALE; j++)
+			for (int i = 0; i < Configurations.GSCALE; i++)
 				pos[j][i] = new CVector3();
 
 		objInit();
@@ -108,7 +110,7 @@ public class Jflight extends Applet3D implements Runnable {
 	}
 
 	private void resetStage() {
-		for (int i = 0; i < Commons.PMAX; i++) {
+		for (int i = 0; i < Configurations.PMAX; i++) {
 			plane[i].posInit();
 			plane[i].no = i;
 		}
@@ -266,7 +268,7 @@ public class Jflight extends Applet3D implements Runnable {
 	}
 
 	private double hudScale() {
-		return Math.max(1.0, Math.min(sWidth / 240.0, sHeight / 135.0));
+		return Math.max(1.0, Math.min(sWidth / DrawScales.HUD_BASE_WIDTH, sHeight / DrawScales.HUD_BASE_HEIGHT));
 	}
 
 	private void updateControls() {
@@ -345,7 +347,7 @@ public class Jflight extends Applet3D implements Runnable {
 	}
 
 	private double getPopupScale() {
-		return Math.min(hudScale(), 1.25);
+		return Math.min(hudScale(), DrawScales.POPUP_MAX_SCALE);
 	}
 
 	private int getVisibleMenuRows() {
@@ -427,7 +429,7 @@ public class Jflight extends Applet3D implements Runnable {
 
 	private void updateWorld() {
 		plane[0].move(this, autoFlight);
-		for (int i = 1; i < Commons.PMAX; i++)
+		for (int i = 1; i < Configurations.PMAX; i++)
 			plane[i].move(this, true);
 		camerapos.set(plane[0].pVel);
 		needsRedraw = true;
@@ -463,7 +465,7 @@ public class Jflight extends Applet3D implements Runnable {
 			updateControls();
 
 			long now = System.currentTimeMillis();
-			if (now - lastFrameMs >= Commons.FRAME_INTERVAL_MS) {
+			if (now - lastFrameMs >= Configurations.FRAME_INTERVAL_MS) {
 				updateWorld();
 				draw();
 				lastFrameMs = now;
@@ -490,7 +492,7 @@ public class Jflight extends Applet3D implements Runnable {
 		CVector3 s1 = new CVector3();
 		CVector3 s2 = new CVector3();
 
-		for (int i = 0; i < Commons.PMAX; i++) {
+		for (int i = 0; i < Configurations.PMAX; i++) {
 			if (!plane[i].use)
 				continue;
 
@@ -522,7 +524,7 @@ public class Jflight extends Applet3D implements Runnable {
 		CVector3 dm2 = new CVector3();
 		CVector3 cp = new CVector3();
 
-		for (int j = 0; j < Plane.BMAX; j++) {
+		for (int j = 0; j < Configurations.PLANE_BMAX; j++) {
 			Bullet bp = aplane.bullet[j];
 
 			if (bp.use > 0) {
@@ -560,7 +562,7 @@ public class Jflight extends Applet3D implements Runnable {
 	protected void writeAam(Plane aplane) {
 		CVector3 dm = new CVector3();
 		CVector3 cp = new CVector3();
-		for (int j = 0; j < Plane.MMMAX; j++) {
+		for (int j = 0; j < Configurations.PLANE_MMMAX; j++) {
 			Missile ap = aplane.aam[j];
 
 			if (ap.use >= 0) {
@@ -573,13 +575,13 @@ public class Jflight extends Applet3D implements Runnable {
 					drawAline(cp, dm);
 				}
 
-				int k = (ap.use + Missile.MOMAX + 1) % Missile.MOMAX;
+				int k = (ap.use + Configurations.MISSILE_MOMAX + 1) % Configurations.MISSILE_MOMAX;
 				change3d(plane[0], ap.opVel[k], dm);
 				for (int m = 0; m < ap.count; m++) {
 					change3d(plane[0], ap.opVel[k], cp);
 					int gray = ap.count > 1 ? 255 - (m * 175 / (ap.count - 1)) : 255;
 					drawMline(dm, cp, grayColor(gray));
-					k = (k + Missile.MOMAX + 1) % Missile.MOMAX;
+					k = (k + Configurations.MISSILE_MOMAX + 1) % Configurations.MISSILE_MOMAX;
 					dm.set(cp);
 				}
 			}
@@ -592,18 +594,18 @@ public class Jflight extends Applet3D implements Runnable {
 	}
 
 	protected void writeGround() {
-		double step = Commons.FMAX * 2 / Commons.GSCALE;
+		double step = Configurations.FMAX * 2 / Configurations.GSCALE;
 
 		int dx = (int) (plane[0].pVel.x / step);
 		int dy = (int) (plane[0].pVel.y / step);
 		double sx = dx * step;
 		double sy = dy * step;
 
-		double my = -Commons.FMAX;
+		double my = -Configurations.FMAX;
 		CVector3 p = new CVector3();
-		for (int j = 0; j < Commons.GSCALE; j++) {
-			double mx = -Commons.FMAX;
-			for (int i = 0; i < Commons.GSCALE; i++) {
+		for (int j = 0; j < Configurations.GSCALE; j++) {
+			double mx = -Configurations.FMAX;
+			for (int i = 0; i < Configurations.GSCALE; i++) {
 				p.x = mx + sx;
 				p.y = my + sy;
 				p.z = gHeight(mx + sx, my + sy);
@@ -613,11 +615,11 @@ public class Jflight extends Applet3D implements Runnable {
 			my += step;
 		}
 
-		for (int j = 0; j < Commons.GSCALE; j++)
-			for (int i = 0; i < Commons.GSCALE - 1; i++)
+		for (int j = 0; j < Configurations.GSCALE; j++)
+			for (int i = 0; i < Configurations.GSCALE - 1; i++)
 				drawSline(pos[j][i], pos[j][i + 1], COLOR_GROUND);
-		for (int i = 0; i < Commons.GSCALE; i++)
-			for (int j = 0; j < Commons.GSCALE - 1; j++)
+		for (int i = 0; i < Configurations.GSCALE; i++)
+			for (int j = 0; j < Configurations.GSCALE - 1; j++)
 				drawSline(pos[j][i], pos[j + 1][i], COLOR_GROUND);
 	}
 
@@ -803,12 +805,12 @@ public class Jflight extends Applet3D implements Runnable {
 			return;
 		Plane player = plane[0];
 		double radius = 44.0 * hudScale();
-		double arrowScale = hudScale() * Commons.HUD_ENEMY_ARROW_SCALE;
+		double arrowScale = hudScale() * DrawScales.HUD_ENEMY_ARROW_SCALE;
 		CVector3 screen = new CVector3();
 		CVector3 rel = new CVector3();
 		CVector3 local = new CVector3();
 
-		for (int i = 1; i < Commons.PMAX; i++) {
+		for (int i = 1; i < Configurations.PMAX; i++) {
 			if (!plane[i].use)
 				continue;
 
@@ -847,7 +849,7 @@ public class Jflight extends Applet3D implements Runnable {
 	}
 
 	private Rectangle getProjectedTargetBounds(Plane player) {
-		if (player.gunTarget < 0 || player.gunTarget >= Commons.PMAX || !plane[player.gunTarget].use)
+		if (player.gunTarget < 0 || player.gunTarget >= Configurations.PMAX || !plane[player.gunTarget].use)
 			return null;
 
 		Plane targetPlane = plane[player.gunTarget];
@@ -890,8 +892,8 @@ public class Jflight extends Applet3D implements Runnable {
 		if (bGraphics == null)
 			return;
 		double scale = hudScale();
-		double centerCrossScale = scale * Commons.HUD_CENTER_CROSS_SCALE;
-		double reticleScale = scale * Commons.HUD_RETICLE_SCALE;
+		double centerCrossScale = scale * DrawScales.HUD_CENTER_CROSS_SCALE;
+		double reticleScale = scale * DrawScales.HUD_RETICLE_SCALE;
 		if (uiReticleVisible) {
 			int reticleRadius = (int) Math.round(8 * reticleScale);
 			int centerCrossRadius = (int) Math.round(3 * centerCrossScale);
@@ -976,7 +978,7 @@ public class Jflight extends Applet3D implements Runnable {
 
 		if (chromeVisible && uiFooterVisible) {
 			int footerY = sHeight - (int) Math.round(22 * scale);
-			bGraphics.setColor(player.gunTemp > Plane.MAXT * 3 / 4 ? COLOR_ORANGE : Color.white);
+			bGraphics.setColor(player.gunTemp > Configurations.PLANE_MAXT * 3 / 4 ? COLOR_ORANGE : Color.white);
 
 			String line1 = "Move W/S A/D  Rudder Q/E  Fire Space  Boost Shift";
 			String line2 = String.format("Reset R  Auto/Select Enter  Menu Tab  HUD H  Gun:%02d", player.gunTemp);
