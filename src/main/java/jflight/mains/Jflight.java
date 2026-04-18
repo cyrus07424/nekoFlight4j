@@ -460,21 +460,37 @@ public class Jflight extends Applet3D implements Runnable {
 	}
 
 	public void run() {
-		long lastFrameMs = System.currentTimeMillis();
+		long lastTickNanos = System.nanoTime();
+		long lastRenderNanos = lastTickNanos - Configurations.FRAME_INTERVAL_NANOS;
+		long accumulatorNanos = 0L;
 		while (running) {
 			updateControls();
 
-			long now = System.currentTimeMillis();
-			if (now - lastFrameMs >= Configurations.FRAME_INTERVAL_MS) {
+			long now = System.nanoTime();
+			accumulatorNanos += now - lastTickNanos;
+			lastTickNanos = now;
+
+			boolean updated = false;
+			while (accumulatorNanos >= Configurations.SIMULATION_STEP_NANOS) {
 				updateWorld();
+				accumulatorNanos -= Configurations.SIMULATION_STEP_NANOS;
+				updated = true;
+			}
+
+			if ((updated || needsRedraw) && now - lastRenderNanos >= Configurations.FRAME_INTERVAL_NANOS) {
 				draw();
-				lastFrameMs = now;
-			} else if (needsRedraw) {
-				draw();
+				lastRenderNanos = now;
 			}
 
 			try {
-				Thread.sleep(5);
+				long untilNextUpdate = Configurations.SIMULATION_STEP_NANOS - accumulatorNanos;
+				long untilNextRender = Configurations.FRAME_INTERVAL_NANOS - (System.nanoTime() - lastRenderNanos);
+				long sleepNanos = Math.min(untilNextUpdate, untilNextRender);
+				if (sleepNanos > 1_000_000L) {
+					Thread.sleep(sleepNanos / 1_000_000L, (int) (sleepNanos % 1_000_000L));
+				} else {
+					Thread.sleep(1);
+				}
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
 				break;

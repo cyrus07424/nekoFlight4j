@@ -3,7 +3,7 @@ package jflight.constants;
 public interface Configurations {
 
 	/** 地表グリッドを描画する範囲の半径。 */
-	double FMAX = 10000;
+	double FMAX = 50000;
 
 	/** 地表グリッドの分割数。 */
 	int GSCALE = 128;
@@ -14,8 +14,17 @@ public interface Configurations {
 	/** 垂直尾翼のラダー偏向角度（度）。 */
 	double RUDDER_DEFLECTION_DEG = 10.0;
 
-	/** フレーム更新間隔（ミリ秒）。 */
-	int FRAME_INTERVAL_MS = 33;
+	/** 描画の最大フレームレート。 */
+	int MAX_FPS = 60;
+
+	/** 描画フレーム間隔（ナノ秒）。 */
+	long FRAME_INTERVAL_NANOS = 1_000_000_000L / MAX_FPS;
+
+	/** シミュレーション更新レート。 */
+	int SIMULATION_HZ = 30;
+
+	/** シミュレーション更新間隔（ナノ秒）。 */
+	long SIMULATION_STEP_NANOS = 1_000_000_000L / SIMULATION_HZ;
 
 	/** 3D 描画時の透視投影スケール。 */
 	double CAMERA_SCALE = 42.0;
