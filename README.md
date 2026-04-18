@@ -1,4 +1,4 @@
-# NekoFlight for Java
+# NekoFlight4j
 
 ## ビルドと起動
 

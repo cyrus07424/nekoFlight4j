@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Polygon;
+import java.awt.Rectangle;
 import java.awt.Stroke;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -30,7 +31,6 @@ public class Jflight extends Applet3D implements Runnable {
 	private static final Color COLOR_GREEN_YELLOW = new Color(192, 255, 96);
 	private static final Color COLOR_ORANGE = new Color(255, 176, 48);
 	private static final Color COLOR_OLIVE = new Color(128, 128, 0);
-	private static final int UI_MENU_VISIBLE_ROWS = 9;
 	private static final String[] UI_MENU_LABELS = {
 			"Attitude HUD", "Reticle", "Lock Box", "Enemy Arrows", "Speed Tape",
 			"Altitude Tape", "TGT Panel", "Header", "Mode Banner", "Footer"
@@ -333,10 +333,32 @@ public class Jflight extends Applet3D implements Runnable {
 	}
 
 	private void adjustMenuScroll() {
+		int visibleRows = getVisibleMenuRows();
+		if (UI_MENU_LABELS.length <= visibleRows) {
+			menuScroll = 0;
+			return;
+		}
 		if (menuIndex < menuScroll)
 			menuScroll = menuIndex;
-		else if (menuIndex >= menuScroll + UI_MENU_VISIBLE_ROWS)
-			menuScroll = menuIndex - UI_MENU_VISIBLE_ROWS + 1;
+		else if (menuIndex >= menuScroll + visibleRows)
+			menuScroll = menuIndex - visibleRows + 1;
+	}
+
+	private double getPopupScale() {
+		return Math.min(hudScale(), 1.25);
+	}
+
+	private int getVisibleMenuRows() {
+		double popupScale = getPopupScale();
+		int y = (int) Math.round(10 * popupScale);
+		int rowStartOffset = (int) Math.round(28 * popupScale);
+		int rowStep = (int) Math.round(12 * popupScale);
+		int bottomPad = (int) Math.round(14 * popupScale);
+		int availableHeight = sHeight - y - bottomPad;
+		int availableRowSpace = availableHeight - rowStartOffset;
+		if (availableRowSpace <= 0)
+			return 1;
+		return Math.max(1, Math.min(UI_MENU_LABELS.length, availableRowSpace / rowStep + 1));
 	}
 
 	private void toggleUiMenuValue(int index) {
@@ -632,34 +654,48 @@ public class Jflight extends Applet3D implements Runnable {
 		if (!menuVisible || bGraphics == null)
 			return;
 
-		double scale = hudScale();
-		int x = (int) Math.round(8 * scale);
-		int y = (int) Math.round(18 * scale);
-		int w = (int) Math.round(172 * scale);
-		int h = (int) Math.round(168 * scale);
+		double popupScale = getPopupScale();
+		int x = (int) Math.round(8 * popupScale);
+		int y = (int) Math.round(10 * popupScale);
+		int w = (int) Math.round(156 * popupScale);
+		int rowStep = (int) Math.round(12 * popupScale);
+		int visibleRows = getVisibleMenuRows();
+		int visibleStart = UI_MENU_LABELS.length <= visibleRows ? 0 : menuScroll;
+		int visibleEnd = Math.min(UI_MENU_LABELS.length, visibleStart + visibleRows);
+		int renderedRows = visibleEnd - visibleStart;
+		int h = (int) Math.round(34 * popupScale) + Math.max(0, renderedRows - 1) * rowStep
+				+ (int) Math.round(14 * popupScale);
+		int headerX = x + (int) Math.round(6 * popupScale);
+		int headerY = y + (int) Math.round(14 * popupScale);
+		int rowStartY = y + (int) Math.round(28 * popupScale);
+		int labelX = x + (int) Math.round(6 * popupScale);
+		int valueX = x + w - (int) Math.round(44 * popupScale);
+		int selectionX = x + (int) Math.round(3 * popupScale);
+		int selectionYPad = (int) Math.round(9 * popupScale);
+		int selectionH = (int) Math.round(11 * popupScale);
+		int maxY = sHeight - h - (int) Math.round(8 * popupScale);
+		if (y > maxY)
+			y = Math.max(0, maxY);
+		headerY = y + (int) Math.round(14 * popupScale);
+		rowStartY = y + (int) Math.round(28 * popupScale);
 		bGraphics.setColor(Color.black);
 		bGraphics.fillRoundRect(x, y, w, h, 10, 10);
 		bGraphics.setColor(COLOR_DARK_GREY);
 		bGraphics.drawRoundRect(x, y, w, h, 10, 10);
 		bGraphics.setColor(COLOR_ORANGE);
 		bGraphics.drawRoundRect(x + 1, y + 1, w - 2, h - 2, 10, 10);
-		bGraphics.drawString("UI MENU", x + (int) Math.round(8 * scale), y + (int) Math.round(18 * scale));
+		bGraphics.drawString("UI MENU", headerX, headerY);
 
-		int visibleStart = menuScroll;
-		int visibleEnd = Math.min(UI_MENU_LABELS.length, visibleStart + UI_MENU_VISIBLE_ROWS);
-		int rowStep = (int) Math.round(16 * scale);
 		for (int i = visibleStart; i < visibleEnd; i++) {
-			int rowY = y + (int) Math.round(34 * scale) + (i - visibleStart) * rowStep;
+			int rowY = rowStartY + (i - visibleStart) * rowStep;
 			boolean selected = i == menuIndex;
 			if (selected) {
 				bGraphics.setColor(COLOR_ORANGE);
-				bGraphics.fillRect(x + 4, rowY - (int) Math.round(12 * scale), w - (int) Math.round(20 * scale),
-						(int) Math.round(14 * scale));
+				bGraphics.fillRect(selectionX, rowY - selectionYPad, w - (int) Math.round(10 * popupScale), selectionH);
 			}
 			bGraphics.setColor(selected ? Color.black : Color.white);
-			bGraphics.drawString(UI_MENU_LABELS[i], x + (int) Math.round(8 * scale), rowY);
+			bGraphics.drawString(UI_MENU_LABELS[i], labelX, rowY);
 			String value = uiMenuValue(i) ? "ON" : "OFF";
-			int valueX = x + w - (int) Math.round(32 * scale);
 			bGraphics.drawString(value, valueX, rowY);
 		}
 	}
@@ -810,6 +846,46 @@ public class Jflight extends Applet3D implements Runnable {
 		}
 	}
 
+	private Rectangle getProjectedTargetBounds(Plane player) {
+		if (player.gunTarget < 0 || player.gunTarget >= Commons.PMAX || !plane[player.gunTarget].use)
+			return null;
+
+		Plane targetPlane = plane[player.gunTarget];
+		CVector3 p = new CVector3();
+		CVector3 screen = new CVector3();
+		int minX = Integer.MAX_VALUE;
+		int minY = Integer.MAX_VALUE;
+		int maxX = Integer.MIN_VALUE;
+		int maxY = Integer.MIN_VALUE;
+		boolean found = false;
+
+		player.checkTransM(targetPlane.aVel);
+		for (int j = 0; j < 19; j++) {
+			for (int k = 0; k < 3; k++) {
+				player.change_ml2w(obj[j][k], p);
+				p.add(targetPlane.pVel);
+				change3d(player, p, screen);
+				if (screen.x <= -1000 || screen.y <= -1000 || screen.x >= 30000 || screen.y >= 30000)
+					continue;
+				int sx = (int) Math.round(screen.x);
+				int sy = (int) Math.round(screen.y);
+				minX = Math.min(minX, sx);
+				minY = Math.min(minY, sy);
+				maxX = Math.max(maxX, sx);
+				maxY = Math.max(maxY, sy);
+				found = true;
+			}
+		}
+
+		if (!found)
+			return null;
+
+		int padding = (int) Math.max(3, Math.round(3 * hudScale()));
+		return new Rectangle(minX - padding, minY - padding,
+				Math.max(8, maxX - minX + padding * 2),
+				Math.max(8, maxY - minY + padding * 2));
+	}
+
 	private void drawReticle(Plane player) {
 		if (bGraphics == null)
 			return;
@@ -838,8 +914,9 @@ public class Jflight extends Applet3D implements Runnable {
 
 		if (uiLockBoxVisible && player.targetSx > -1000) {
 			bGraphics.setColor(Color.red);
-			int lockSize = (int) Math.round(12 * scale);
-			bGraphics.drawRect(player.targetSx - lockSize / 2, player.targetSy - lockSize / 2, lockSize, lockSize);
+			Rectangle targetBounds = getProjectedTargetBounds(player);
+			if (targetBounds != null)
+				bGraphics.drawRect(targetBounds.x, targetBounds.y, targetBounds.width, targetBounds.height);
 		}
 	}
 
