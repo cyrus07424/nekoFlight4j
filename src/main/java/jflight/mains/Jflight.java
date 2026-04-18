@@ -1004,12 +1004,17 @@ public class Jflight extends Applet3D implements Runnable {
 		Font originalFont = bGraphics.getFont();
 		Font ammoFont = new Font(Font.MONOSPACED, originalFont.getStyle(), originalFont.getSize());
 		int digits = Math.max(2, Integer.toString(Configurations.PLANE_MMMAX).length());
+		int remainingMissileCount = player.getRemainingMissileCount();
 		String ammoText = String.format("AAM %" + digits + "d/%" + digits + "d",
-				player.getRemainingMissileCount(), Configurations.PLANE_MMMAX);
+				remainingMissileCount, Configurations.PLANE_MMMAX);
 
 		bGraphics.setFont(ammoFont);
-		bGraphics.setColor(Colors.ORANGE);
-		drawCenteredText(ammoText, sCenterX, sHeight - (int) Math.round(38 * scale));
+		if (remainingMissileCount == 0) {
+			bGraphics.setColor(Colors.RED);
+		} else {
+			bGraphics.setColor(Colors.CYAN);
+		}
+		drawCenteredText(ammoText, sCenterX, sHeight - (int) Math.round(25 * scale));
 		bGraphics.setFont(originalFont);
 	}
 
@@ -1020,7 +1025,7 @@ public class Jflight extends Applet3D implements Runnable {
 		int barW = (int) Math.round(32 * scale);
 		int barH = (int) Math.round(2 * scale);
 		int barX = sCenterX - barW / 2;
-		int barY = sHeight - (int) Math.round(30 * scale);
+		int barY = sHeight - (int) Math.round(35 * scale);
 		int fillW = (int) Math.round((double) player.gunTemp / Configurations.PLANE_MAXT * (barW - 2));
 		fillW = Math.max(0, Math.min(barW - 2, fillW));
 

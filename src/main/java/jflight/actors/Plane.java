@@ -834,7 +834,10 @@ public class Plane {
 
 		// 弾丸発射処理
 
-		if (gunShoot && gunTemp++ < Configurations.PLANE_MAXT) {
+		if (gunTemp >= Configurations.PLANE_MAXT)
+			heatWait = true;
+
+		if (!heatWait && gunShoot && gunTemp++ < Configurations.PLANE_MAXT) {
 			for (i = 0; i < Configurations.PLANE_BMAX; i++) {
 				if (bullet[i].use == 0) {
 					bullet[i].vVel.setPlus(vpVel, oi);
@@ -849,6 +852,9 @@ public class Plane {
 			}
 		} else if (gunTemp > 0)
 			gunTemp--;
+
+		if (gunTemp < 2)
+			heatWait = false;
 	}
 
 	// ミサイル移動と発射処理
