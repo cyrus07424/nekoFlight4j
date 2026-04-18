@@ -2,6 +2,7 @@ package jflight.mains;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Polygon;
@@ -17,7 +18,7 @@ import javax.swing.WindowConstants;
 import jflight.actors.Bullet;
 import jflight.actors.Missile;
 import jflight.actors.Plane;
-import jflight.constants.Commons;
+import jflight.constants.Colors;
 import jflight.constants.Configurations;
 import jflight.constants.DrawScales;
 import jflight.swing.Applet3D;
@@ -25,17 +26,9 @@ import jflight.utils.CVector3;
 
 public class Jflight extends Applet3D implements Runnable {
 
-	private static final Color COLOR_GROUND = new Color(0, 96, 0);
-	private static final Color COLOR_ENEMY = new Color(128, 128, 0);
-	private static final Color COLOR_DARK_GREY = new Color(80, 80, 80);
-	private static final Color COLOR_PANEL_SHADOW = new Color(48, 48, 48);
-	private static final Color COLOR_CYAN = new Color(80, 220, 255);
-	private static final Color COLOR_GREEN_YELLOW = new Color(192, 255, 96);
-	private static final Color COLOR_ORANGE = new Color(255, 176, 48);
-	private static final Color COLOR_OLIVE = new Color(128, 128, 0);
 	private static final String[] UI_MENU_LABELS = {
 			"Attitude HUD", "Reticle", "Lock Box", "Enemy Arrows", "Speed Tape",
-			"Altitude Tape", "TGT Panel", "Header", "Mode Banner", "Footer"
+			"Altitude Tape", "TGT Panel", "ACC / G", "AAM Ammo", "Gun Heat", "Header", "Mode Banner", "Footer"
 	};
 
 	protected Thread mainThread = null;
@@ -55,6 +48,9 @@ public class Jflight extends Applet3D implements Runnable {
 	protected boolean uiSpeedVisible = true;
 	protected boolean uiAltitudeVisible = true;
 	protected boolean uiTargetVisible = true;
+	protected boolean uiAccelVisible = true;
+	protected boolean uiAamAmmoVisible = true;
+	protected boolean uiGunHeatVisible = true;
 	protected boolean uiHeaderVisible = true;
 	protected boolean uiModeBannerVisible = true;
 	protected boolean uiFooterVisible = true;
@@ -142,6 +138,7 @@ public class Jflight extends Applet3D implements Runnable {
 	}
 
 	public void resetStagePreserveUi() {
+		boolean savedAutoFlight = autoFlight;
 		boolean savedChromeVisible = chromeVisible;
 		boolean savedMenuVisible = menuVisible;
 		boolean savedUiAttitudeVisible = uiAttitudeVisible;
@@ -151,6 +148,9 @@ public class Jflight extends Applet3D implements Runnable {
 		boolean savedUiSpeedVisible = uiSpeedVisible;
 		boolean savedUiAltitudeVisible = uiAltitudeVisible;
 		boolean savedUiTargetVisible = uiTargetVisible;
+		boolean savedUiAccelVisible = uiAccelVisible;
+		boolean savedUiAamAmmoVisible = uiAamAmmoVisible;
+		boolean savedUiGunHeatVisible = uiGunHeatVisible;
 		boolean savedUiHeaderVisible = uiHeaderVisible;
 		boolean savedUiModeBannerVisible = uiModeBannerVisible;
 		boolean savedUiFooterVisible = uiFooterVisible;
@@ -159,6 +159,7 @@ public class Jflight extends Applet3D implements Runnable {
 
 		resetStage();
 
+		autoFlight = savedAutoFlight;
 		chromeVisible = savedChromeVisible;
 		menuVisible = savedMenuVisible;
 		uiAttitudeVisible = savedUiAttitudeVisible;
@@ -168,6 +169,9 @@ public class Jflight extends Applet3D implements Runnable {
 		uiSpeedVisible = savedUiSpeedVisible;
 		uiAltitudeVisible = savedUiAltitudeVisible;
 		uiTargetVisible = savedUiTargetVisible;
+		uiAccelVisible = savedUiAccelVisible;
+		uiAamAmmoVisible = savedUiAamAmmoVisible;
+		uiGunHeatVisible = savedUiGunHeatVisible;
 		uiHeaderVisible = savedUiHeaderVisible;
 		uiModeBannerVisible = savedUiModeBannerVisible;
 		uiFooterVisible = savedUiFooterVisible;
@@ -330,7 +334,7 @@ public class Jflight extends Applet3D implements Runnable {
 		}
 		prevToggleAuto = inputToggleAuto;
 
-		if (keyShoot || keyLeft || keyRight || keyUp || keyDown || keyRudderLeft || keyRudderRight || keyBoost)
+		if (keyShoot || keyLeft || keyRight || keyUp || keyDown || keyBoost)
 			autoFlight = false;
 	}
 
@@ -387,12 +391,21 @@ public class Jflight extends Applet3D implements Runnable {
 			uiTargetVisible = !uiTargetVisible;
 			break;
 		case 7:
-			uiHeaderVisible = !uiHeaderVisible;
+			uiAccelVisible = !uiAccelVisible;
 			break;
 		case 8:
-			uiModeBannerVisible = !uiModeBannerVisible;
+			uiAamAmmoVisible = !uiAamAmmoVisible;
 			break;
 		case 9:
+			uiGunHeatVisible = !uiGunHeatVisible;
+			break;
+		case 10:
+			uiHeaderVisible = !uiHeaderVisible;
+			break;
+		case 11:
+			uiModeBannerVisible = !uiModeBannerVisible;
+			break;
+		case 12:
 			uiFooterVisible = !uiFooterVisible;
 			break;
 		default:
@@ -417,10 +430,16 @@ public class Jflight extends Applet3D implements Runnable {
 		case 6:
 			return uiTargetVisible;
 		case 7:
-			return uiHeaderVisible;
+			return uiAccelVisible;
 		case 8:
-			return uiModeBannerVisible;
+			return uiAamAmmoVisible;
 		case 9:
+			return uiGunHeatVisible;
+		case 10:
+			return uiHeaderVisible;
+		case 11:
+			return uiModeBannerVisible;
+		case 12:
 			return uiFooterVisible;
 		default:
 			return false;
@@ -529,7 +548,7 @@ public class Jflight extends Applet3D implements Runnable {
 					change3d(plane[0], p1, s1);
 					change3d(plane[0], p2, s2);
 
-					drawPoly(s0, s1, s2, COLOR_ENEMY);
+					drawPoly(s0, s1, s2, Colors.OLIVE);
 				}
 			}
 		}
@@ -633,10 +652,10 @@ public class Jflight extends Applet3D implements Runnable {
 
 		for (int j = 0; j < Configurations.GSCALE; j++)
 			for (int i = 0; i < Configurations.GSCALE - 1; i++)
-				drawSline(pos[j][i], pos[j][i + 1], COLOR_GROUND);
+				drawSline(pos[j][i], pos[j][i + 1], Colors.GROUND);
 		for (int i = 0; i < Configurations.GSCALE; i++)
 			for (int j = 0; j < Configurations.GSCALE - 1; j++)
-				drawSline(pos[j][i], pos[j + 1][i], COLOR_GROUND);
+				drawSline(pos[j][i], pos[j + 1][i], Colors.GROUND);
 	}
 
 	private void drawHudPanel(int x, int y, int w, int h, Color color) {
@@ -644,7 +663,7 @@ public class Jflight extends Applet3D implements Runnable {
 			return;
 		bGraphics.setColor(color);
 		bGraphics.drawRoundRect(x, y, w, h, 8, 8);
-		bGraphics.setColor(COLOR_PANEL_SHADOW);
+		bGraphics.setColor(Colors.PANEL_SHADOW);
 		bGraphics.drawRoundRect(x + 1, y + 1, w - 2, h - 2, 8, 8);
 	}
 
@@ -662,7 +681,7 @@ public class Jflight extends Applet3D implements Runnable {
 		int bannerH = metrics.getAscent() + metrics.getDescent() + padY * 2;
 		int bannerX = textX - padX;
 		int bannerY = textBaselineY - metrics.getAscent() - padY;
-		Color modeColor = autoFlight ? Color.yellow : COLOR_CYAN;
+		Color modeColor = autoFlight ? Colors.YELLOW : Colors.CYAN;
 		drawHudPanel(bannerX, bannerY, bannerW, bannerH, modeColor);
 		bGraphics.setColor(modeColor);
 		bGraphics.drawString(modeText, textX, textBaselineY);
@@ -696,11 +715,11 @@ public class Jflight extends Applet3D implements Runnable {
 			y = Math.max(0, maxY);
 		headerY = y + (int) Math.round(14 * popupScale);
 		rowStartY = y + (int) Math.round(28 * popupScale);
-		bGraphics.setColor(Color.black);
+		bGraphics.setColor(Colors.BLACK);
 		bGraphics.fillRoundRect(x, y, w, h, 10, 10);
-		bGraphics.setColor(COLOR_DARK_GREY);
+		bGraphics.setColor(Colors.DARK_GREY);
 		bGraphics.drawRoundRect(x, y, w, h, 10, 10);
-		bGraphics.setColor(COLOR_ORANGE);
+		bGraphics.setColor(Colors.ORANGE);
 		bGraphics.drawRoundRect(x + 1, y + 1, w - 2, h - 2, 10, 10);
 		bGraphics.drawString("UI MENU", headerX, headerY);
 
@@ -708,10 +727,10 @@ public class Jflight extends Applet3D implements Runnable {
 			int rowY = rowStartY + (i - visibleStart) * rowStep;
 			boolean selected = i == menuIndex;
 			if (selected) {
-				bGraphics.setColor(COLOR_ORANGE);
+				bGraphics.setColor(Colors.ORANGE);
 				bGraphics.fillRect(selectionX, rowY - selectionYPad, w - (int) Math.round(10 * popupScale), selectionH);
 			}
-			bGraphics.setColor(selected ? Color.black : Color.white);
+			bGraphics.setColor(selected ? Colors.BLACK : Colors.WHITE);
 			bGraphics.drawString(UI_MENU_LABELS[i], labelX, rowY);
 			String value = uiMenuValue(i) ? "ON" : "OFF";
 			bGraphics.drawString(value, valueX, rowY);
@@ -786,7 +805,7 @@ public class Jflight extends Applet3D implements Runnable {
 			boolean horizon = mark == 0;
 			int halfWidth = (int) Math.round((horizon ? 20 : 12) * scale);
 			int gap = (int) Math.round((horizon ? 0 : 4) * scale);
-			bGraphics.setColor(horizon ? COLOR_GREEN_YELLOW : COLOR_DARK_GREY);
+			bGraphics.setColor(horizon ? Colors.GREEN_YELLOW : Colors.DARK_GREY);
 
 			int rx0 = rotateX(-halfWidth, yOffset, rollRad);
 			int ry0 = rotateY(-halfWidth, yOffset, rollRad);
@@ -801,9 +820,13 @@ public class Jflight extends Applet3D implements Runnable {
 			bGraphics.drawLine(cx + rx0, cy + ry0, cx + rx1, cy + ry1);
 
 			if (!horizon) {
-				int tx = rotateX(-halfWidth - 14 * scale, yOffset - 2 * scale, rollRad);
-				int ty = rotateY(-halfWidth - 14 * scale, yOffset - 2 * scale, rollRad);
-				bGraphics.drawString(Integer.toString(-mark), cx + tx, cy + ty);
+				String markText = Integer.toString(-mark);
+				int leftTx = rotateX(-halfWidth - 12 * scale, yOffset - 2 * scale, rollRad);
+				int leftTy = rotateY(-halfWidth - 12 * scale, yOffset - 2 * scale, rollRad);
+				int rightTx = rotateX(halfWidth + 6 * scale, yOffset - 2 * scale, rollRad);
+				int rightTy = rotateY(halfWidth + 6 * scale, yOffset - 2 * scale, rollRad);
+				bGraphics.drawString(markText, cx + leftTx, cy + leftTy);
+				bGraphics.drawString(markText, cx + rightTx, cy + rightTy);
 			}
 		}
 	}
@@ -859,7 +882,7 @@ public class Jflight extends Applet3D implements Runnable {
 			int rightX = (int) Math.round(baseX + dirY * 4 * arrowScale);
 			int rightY = (int) Math.round(baseY - dirX * 4 * arrowScale);
 
-			bGraphics.setColor(COLOR_ORANGE);
+			bGraphics.setColor(Colors.ORANGE);
 			bGraphics.fillPolygon(new Polygon(new int[] { tipX, leftX, rightX }, new int[] { tipY, leftY, rightY }, 3));
 		}
 	}
@@ -916,13 +939,13 @@ public class Jflight extends Applet3D implements Runnable {
 			int centerCrossArm = (int) Math.round(6 * centerCrossScale);
 			int reticleArm = (int) Math.round(14 * reticleScale);
 
-			bGraphics.setColor(COLOR_DARK_GREY);
+			bGraphics.setColor(Colors.DARK_GREY);
 			bGraphics.drawLine(sCenterX - centerCrossArm, sCenterY, sCenterX + centerCrossArm, sCenterY);
 			bGraphics.drawLine(sCenterX, sCenterY - centerCrossArm, sCenterX, sCenterY + centerCrossArm);
 
 			int gunX = sCenterX + (int) Math.round(player.gunX * 0.36 * scale);
 			int gunY = sCenterY - (int) Math.round((player.gunY - 20.0) * 0.36 * scale);
-			Color reticleColor = autoFlight ? Color.yellow : COLOR_CYAN;
+			Color reticleColor = autoFlight ? Colors.YELLOW : Colors.CYAN;
 			bGraphics.setColor(reticleColor);
 			bGraphics.drawOval(gunX - reticleRadius, gunY - reticleRadius, reticleRadius * 2, reticleRadius * 2);
 			bGraphics.drawLine(gunX - reticleArm, gunY, gunX + reticleArm, gunY);
@@ -931,7 +954,7 @@ public class Jflight extends Applet3D implements Runnable {
 		}
 
 		if (uiLockBoxVisible && player.targetSx > -1000) {
-			bGraphics.setColor(Color.red);
+			bGraphics.setColor(Colors.RED);
 			Rectangle targetBounds = getProjectedTargetBounds(player);
 			if (targetBounds != null)
 				bGraphics.drawRect(targetBounds.x, targetBounds.y, targetBounds.width, targetBounds.height);
@@ -941,6 +964,100 @@ public class Jflight extends Applet3D implements Runnable {
 	private void drawCenteredText(String text, int centerX, int baselineY) {
 		FontMetrics metrics = bGraphics.getFontMetrics();
 		bGraphics.drawString(text, centerX - metrics.stringWidth(text) / 2, baselineY);
+	}
+
+	private void drawAccelerationHud(Plane player, double scale) {
+		if (bGraphics == null)
+			return;
+
+		Font originalFont = bGraphics.getFont();
+		Font hudFont = new Font(Font.MONOSPACED, originalFont.getStyle(), originalFont.getSize());
+		bGraphics.setFont(hudFont);
+
+		FontMetrics metrics = bGraphics.getFontMetrics();
+		String accelText = String.format("ACC %5.1f", player.getAppliedAcceleration());
+		String gText = String.format("G   %4.2f", player.getAppliedG());
+		int padX = (int) Math.max(4, Math.round(4 * scale));
+		int topPad = (int) Math.max(3, Math.round(3 * scale));
+		int bottomPad = (int) Math.max(3, Math.round(3 * scale));
+		int lineGap = (int) Math.max(0, Math.round(1 * scale));
+		int textW = Math.max(metrics.stringWidth(accelText), metrics.stringWidth(gText));
+		int panelW = textW + padX * 2;
+		int panelH = metrics.getAscent() * 2 + topPad + bottomPad + lineGap;
+		int panelX = (int) Math.round(16 * scale);
+		int panelY = (int) Math.round(32 * scale);
+		int textX = panelX + padX;
+		int accelBaseY = panelY + topPad + metrics.getAscent();
+		int gBaseY = accelBaseY + metrics.getAscent() + lineGap;
+
+		drawHudPanel(panelX, panelY, panelW, panelH, Colors.CYAN);
+		bGraphics.setColor(Colors.CYAN);
+		bGraphics.drawString(accelText, textX, accelBaseY);
+		bGraphics.drawString(gText, textX, gBaseY);
+		bGraphics.setFont(originalFont);
+	}
+
+	private void drawMissileAmmoHud(Plane player, double scale) {
+		if (bGraphics == null)
+			return;
+
+		Font originalFont = bGraphics.getFont();
+		Font ammoFont = new Font(Font.MONOSPACED, originalFont.getStyle(), originalFont.getSize());
+		int digits = Math.max(2, Integer.toString(Configurations.PLANE_MMMAX).length());
+		String ammoText = String.format("AAM %" + digits + "d/%" + digits + "d",
+				player.getRemainingMissileCount(), Configurations.PLANE_MMMAX);
+
+		bGraphics.setFont(ammoFont);
+		bGraphics.setColor(Colors.ORANGE);
+		drawCenteredText(ammoText, sCenterX, sHeight - (int) Math.round(38 * scale));
+		bGraphics.setFont(originalFont);
+	}
+
+	private void drawGunHeatBar(Plane player, double scale) {
+		if (bGraphics == null)
+			return;
+
+		int barW = (int) Math.round(32 * scale);
+		int barH = (int) Math.round(2 * scale);
+		int barX = sCenterX - barW / 2;
+		int barY = sHeight - (int) Math.round(30 * scale);
+		int fillW = (int) Math.round((double) player.gunTemp / Configurations.PLANE_MAXT * (barW - 2));
+		fillW = Math.max(0, Math.min(barW - 2, fillW));
+
+		double heatRatio = (double) player.gunTemp / Configurations.PLANE_MAXT;
+		Color heatColor;
+		if (player.heatWait) {
+			heatColor = Colors.HEAT_WAIT;
+		} else if (heatRatio < 0.4) {
+			heatColor = Colors.CYAN;
+		} else if (heatRatio < 0.7) {
+			heatColor = Colors.GREEN_YELLOW;
+		} else if (heatRatio < 0.9) {
+			heatColor = Colors.ORANGE;
+		} else {
+			heatColor = Colors.RED;
+		}
+
+		Color backgroundColor = Colors.HUD_BACKGROUND;
+		Color frameColor = new Color(heatColor.getRed(), heatColor.getGreen(), heatColor.getBlue());
+		Color fillColor = new Color(heatColor.getRed(), heatColor.getGreen(), heatColor.getBlue(), 127);
+		Color tickColor = Colors.HUD_TICK;
+
+		bGraphics.setColor(backgroundColor);
+		bGraphics.fillRect(barX, barY, barW, barH);
+		bGraphics.setColor(frameColor);
+		bGraphics.drawRect(barX, barY, barW, barH);
+		if (fillW > 0) {
+			bGraphics.setColor(fillColor);
+			bGraphics.fillRect(barX + 1, barY + 1, fillW, Math.max(1, barH - 1));
+		}
+		bGraphics.setColor(tickColor);
+		for (int i = 1; i < 4; i++) {
+			int tickX = barX + i * barW / 4;
+			bGraphics.drawLine(tickX, barY + 1, tickX, barY + barH - 2);
+		}
+		bGraphics.setColor(frameColor);
+		drawCenteredText("GUN", sCenterX, barY - (int) Math.round(1 * scale));
 	}
 
 	private void drawHud() {
@@ -956,7 +1073,7 @@ public class Jflight extends Applet3D implements Runnable {
 			drawModeBanner();
 
 		if (chromeVisible && uiHeaderVisible) {
-			bGraphics.setColor(Color.green);
+			bGraphics.setColor(Colors.GREEN);
 			bGraphics.drawString("NekoFlight4j", (int) Math.round(4 * scale), (int) Math.round(8 * scale));
 			String right = "PC HUD";
 			FontMetrics metrics = bGraphics.getFontMetrics();
@@ -966,10 +1083,10 @@ public class Jflight extends Applet3D implements Runnable {
 
 		if (uiSpeedVisible)
 			drawHudTape(sCenterX - (int) Math.round(26 * scale), sCenterY,
-					(int) Math.round(player.vpVel.abs()), 10, 50, 40, true, "SPD", COLOR_CYAN);
+					(int) Math.round(player.vpVel.abs()), 10, 50, 40, true, "SPD", Colors.CYAN);
 		if (uiAltitudeVisible)
 			drawHudTape(sCenterX + (int) Math.round(26 * scale), sCenterY,
-					(int) Math.round(player.height), 100, 500, 400, false, "ALT", COLOR_GREEN_YELLOW);
+					(int) Math.round(player.height), 100, 500, 400, false, "ALT", Colors.GREEN_YELLOW);
 
 		if (uiTargetVisible && player.targetDis > 0.0) {
 			FontMetrics metrics = bGraphics.getFontMetrics();
@@ -986,18 +1103,25 @@ public class Jflight extends Applet3D implements Runnable {
 			int textX = panelX + padX;
 			int labelBaseY = panelY + topPad + metrics.getAscent();
 			int valueBaseY = labelBaseY + metrics.getAscent() + lineGap;
-			drawHudPanel(panelX, panelY, panelW, panelH, COLOR_ORANGE);
-			bGraphics.setColor(COLOR_ORANGE);
+			drawHudPanel(panelX, panelY, panelW, panelH, Colors.ORANGE);
+			bGraphics.setColor(Colors.ORANGE);
 			bGraphics.drawString("TGT", textX, labelBaseY);
 			bGraphics.drawString(targetText, textX, valueBaseY);
 		}
 
+		if (uiAccelVisible)
+			drawAccelerationHud(player, scale);
+		if (uiAamAmmoVisible)
+			drawMissileAmmoHud(player, scale);
+		if (uiGunHeatVisible)
+			drawGunHeatBar(player, scale);
+
 		if (chromeVisible && uiFooterVisible) {
 			int footerY = sHeight - (int) Math.round(22 * scale);
-			bGraphics.setColor(player.gunTemp > Configurations.PLANE_MAXT * 3 / 4 ? COLOR_ORANGE : Color.white);
+			bGraphics.setColor(Colors.WHITE);
 
-			String line1 = "Move W/S A/D  Rudder Q/E  Fire Space  Boost Shift";
-			String line2 = String.format("Reset R  Auto/Select Enter  Menu Tab  HUD H  Gun:%02d", player.gunTemp);
+			String line1 = "Move W/S A/D  Fire Space  Boost Shift";
+			String line2 = "Reset R  Auto/Select Enter  Menu Tab  HUD H";
 			if (sWidth >= 880) {
 				drawCenteredText(line1 + "   " + line2, sCenterX, footerY + (int) Math.round(14 * scale));
 			} else {

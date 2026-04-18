@@ -11,9 +11,6 @@ public interface Configurations {
 	/** 機体数の最大値。 */
 	int PMAX = 4;
 
-	/** 垂直尾翼のラダー偏向角度（度）。 */
-	double RUDDER_DEFLECTION_DEG = 10.0;
-
 	/** 描画の最大フレームレート。 */
 	int MAX_FPS = 60;
 

@@ -24,7 +24,6 @@ java -jar target/jflight-1.0-SNAPSHOT.jar
 
 - `W` / `S` または `↑` / `↓` : ピッチ
 - `A` / `D` または `←` / `→` : ロール
-- `Q` / `E` : ラダー
 - `Space` : 射撃 / ミサイル
 - `Shift` : ブースト
 - `Enter` : AUTO / MANUAL 切替（設定メニューでは項目切替）

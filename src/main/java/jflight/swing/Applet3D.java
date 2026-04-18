@@ -14,6 +14,7 @@ import javax.swing.JPanel;
 import jflight.constants.Configurations;
 import jflight.actors.Plane;
 import jflight.constants.Commons;
+import jflight.constants.Colors;
 import jflight.utils.CVector3;
 
 public class Applet3D extends JPanel {
@@ -84,7 +85,7 @@ public class Applet3D extends JPanel {
 			if (backImage == null || bWidth != sWidth || bHeight != sHeight)
 				bgInit();
 			if (bGraphics != null) {
-				bGraphics.setColor(Color.black);
+				bGraphics.setColor(Colors.BLACK);
 				bGraphics.fillRect(0, 0, bWidth, bHeight);
 			}
 		}
@@ -130,7 +131,7 @@ public class Applet3D extends JPanel {
 	}
 
 	public void drawSline(CVector3 p0, CVector3 p1) {
-		drawSline(p0, p1, Color.white);
+		drawSline(p0, p1, Colors.WHITE);
 	}
 
 	public void drawSline(CVector3 p0, CVector3 p1, Color color) {
@@ -143,18 +144,18 @@ public class Applet3D extends JPanel {
 
 	public void drawBlined(CVector3 p0, CVector3 p1) {
 		if (p0.x > -1000 && p1.x > -1000)
-			drawSline(p0, p1, Color.yellow);
+			drawSline(p0, p1, Colors.YELLOW);
 	}
 
 	public void drawBline(CVector3 p0, CVector3 p1) {
 		if (p0.x > -1000 && p1.x > -1000) {
-			drawSline(p0, p1, Color.yellow);
-			drawSline(new CVector3(p0.x + 1, p0.y, 0), new CVector3(p1.x + 1, p1.y, 0), Color.yellow);
+			drawSline(p0, p1, Colors.YELLOW);
+			drawSline(new CVector3(p0.x + 1, p0.y, 0), new CVector3(p1.x + 1, p1.y, 0), Colors.YELLOW);
 		}
 	}
 
 	public void drawMline(CVector3 p0, CVector3 p1) {
-		drawMline(p0, p1, Color.lightGray);
+		drawMline(p0, p1, Colors.LIGHT_GRAY);
 	}
 
 	public void drawMline(CVector3 p0, CVector3 p1, Color color) {
@@ -164,13 +165,13 @@ public class Applet3D extends JPanel {
 
 	public void drawAline(CVector3 p0, CVector3 p1) {
 		if (p0.x > -1000 && p1.x > -1000) {
-			drawSline(p0, p1, Color.white);
-			drawSline(new CVector3(p0.x + 1, p0.y, 0), new CVector3(p1.x + 1, p1.y, 0), Color.white);
+			drawSline(p0, p1, Colors.WHITE);
+			drawSline(new CVector3(p0.x + 1, p0.y, 0), new CVector3(p1.x + 1, p1.y, 0), Colors.WHITE);
 		}
 	}
 
 	public void drawPoly(CVector3 p0, CVector3 p1, CVector3 p2) {
-		drawPoly(p0, p1, p2, Color.white);
+		drawPoly(p0, p1, p2, Colors.WHITE);
 	}
 
 	public void drawPoly(CVector3 p0, CVector3 p1, CVector3 p2, Color color) {
@@ -184,13 +185,13 @@ public class Applet3D extends JPanel {
 			int rr = (int) (2000 / p.z) + 2;
 			if (rr > 40)
 				rr = 40;
-			bGraphics.setColor(Color.orange);
+			bGraphics.setColor(Colors.ORANGE);
 			bGraphics.fillOval((int) p.x - rr / 2, (int) p.y - rr / 2, rr, rr);
 		}
 	}
 
 	private void jbInit() throws Exception {
-		setBackground(Color.black);
+		setBackground(Colors.BLACK);
 		addKeyListener(new java.awt.event.KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) {
@@ -208,7 +209,7 @@ public class Applet3D extends JPanel {
 				this_componentResized(e);
 			}
 		});
-		setForeground(Color.white);
+		setForeground(Colors.WHITE);
 	}
 
 	void this_componentResized(ComponentEvent e) {

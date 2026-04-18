@@ -457,18 +457,10 @@ public class Plane {
 			stickVel.y = -1;
 		if (world.keyRight)
 			stickVel.y = 1;
-		if (world.keyRudderLeft)
-			stickVel.z = -1;
-		if (world.keyRudderRight)
-			stickVel.z = 1;
 
 		stickPos.addCons(stickVel, stickA);
 		stickPos.subCons(stickPos, stickR);
-
-		if (stickPos.z > 1)
-			stickPos.z = 1;
-		if (stickPos.z < -1)
-			stickPos.z = -1;
+		stickPos.z = 0;
 
 		// スティック位置を距離１以内に丸めておく
 
@@ -525,7 +517,7 @@ public class Plane {
 		wing[1].bAngle = 0;
 		wing[2].aAngle = -stickPos.x * 6 / 180 * Math.PI;
 		wing[2].bAngle = 0;
-		wing[3].aAngle = stickPos.z * Configurations.RUDDER_DEFLECTION_DEG / 180 * Math.PI;
+		wing[3].aAngle = 0;
 		wing[3].bAngle = 0;
 		wing[4].aAngle = 0;
 		wing[4].bAngle = 0;
@@ -568,7 +560,6 @@ public class Plane {
 		vaVel.x += am.x / iMass.x * Commons.DT;
 		vaVel.y += am.y / iMass.y * Commons.DT;
 		vaVel.z += am.z / iMass.z * Commons.DT;
-
 		aVel.x += (vaVel.x * cosb + vaVel.z * sinb) * Commons.DT;
 		aVel.y += (vaVel.y + (vaVel.x * sinb - vaVel.z * cosb) * sina / cosa) * Commons.DT;
 		aVel.z += (-vaVel.x * sinb + vaVel.z * cosb) / cosa * Commons.DT;
@@ -984,6 +975,26 @@ public class Plane {
 				ap.targetNo = aamTarget[k];
 			}
 		}
+	}
+
+	public int getRemainingMissileCount() {
+		int remaining = 0;
+		for (int i = 0; i < Configurations.PLANE_MMMAX; i++) {
+			if (aam[i].use < 0)
+				remaining++;
+		}
+		return remaining;
+	}
+
+	public double getAppliedAcceleration() {
+		double ax = gVel.x;
+		double ay = gVel.y;
+		double az = gVel.z - Commons.G;
+		return Math.sqrt(ax * ax + ay * ay + az * az);
+	}
+
+	public double getAppliedG() {
+		return getAppliedAcceleration() / Math.abs(Commons.G);
 	}
 
 }
