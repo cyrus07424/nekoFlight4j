@@ -412,25 +412,27 @@ public class Jflight extends Applet3D implements Runnable {
 	}
 
 	public void draw() {
-		clear();
+		synchronized (renderLock) {
+			clear();
 
-		plane[0].checkTrans();
-		writeGround();
-		writePlane();
+			plane[0].checkTrans();
+			writeGround();
+			writePlane();
 
-		if (uiAttitudeVisible)
-			drawAttitudeHud(plane[0]);
-		if (uiEnemyArrowsVisible)
-			drawEnemyDirectionArrows();
-		if (uiReticleVisible || uiLockBoxVisible)
-			drawReticle(plane[0]);
+			if (uiAttitudeVisible)
+				drawAttitudeHud(plane[0]);
+			if (uiEnemyArrowsVisible)
+				drawEnemyDirectionArrows();
+			if (uiReticleVisible || uiLockBoxVisible)
+				drawReticle(plane[0]);
 
-		drawHud();
-		drawPopupMenu();
+			drawHud();
+			drawPopupMenu();
 
-		flush();
-		getToolkit().sync();
-		needsRedraw = false;
+			flush();
+			getToolkit().sync();
+			needsRedraw = false;
+		}
 	}
 
 	public void run() {
@@ -609,14 +611,21 @@ public class Jflight extends Applet3D implements Runnable {
 	private void drawModeBanner() {
 		if (bGraphics == null)
 			return;
-		int bannerW = (int) Math.round(66 * hudScale());
-		int bannerH = (int) Math.round(14 * hudScale());
-		int bannerX = (sWidth - bannerW) / 2;
-		int bannerY = (int) Math.round(4 * hudScale());
+		double scale = hudScale();
+		String modeText = autoFlight ? "AUTO" : "MANUAL";
+		FontMetrics metrics = bGraphics.getFontMetrics();
+		int textX = sWidth / 2 - 20;
+		int textBaselineY = (int) Math.round(4 * scale) + (int) Math.round(14 * scale) - 4;
+		int padX = (int) Math.max(5, Math.round(6 * scale));
+		int padY = (int) Math.max(3, Math.round(3 * scale));
+		int bannerW = metrics.stringWidth(modeText) + padX * 2;
+		int bannerH = metrics.getAscent() + metrics.getDescent() + padY * 2;
+		int bannerX = textX - padX;
+		int bannerY = textBaselineY - metrics.getAscent() - padY;
 		Color modeColor = autoFlight ? Color.yellow : COLOR_CYAN;
 		drawHudPanel(bannerX, bannerY, bannerW, bannerH, modeColor);
 		bGraphics.setColor(modeColor);
-		bGraphics.drawString(autoFlight ? "AUTO" : "MANUAL", bannerX + bannerW / 2 - 20, bannerY + bannerH - 4);
+		bGraphics.drawString(modeText, textX, textBaselineY);
 	}
 
 	private void drawPopupMenu() {
@@ -662,17 +671,24 @@ public class Jflight extends Applet3D implements Runnable {
 		double scale = hudScale();
 		int tapeH = (int) Math.round(58 * scale);
 		int topY = centerY - tapeH / 2;
-		int boxW = (int) Math.round(34 * scale);
-		int boxH = (int) Math.round(16 * scale);
-		int boxX = leftSide ? centerX - (int) Math.round(42 * scale) : centerX + (int) Math.round(8 * scale);
-		int tickOuterX = leftSide ? boxX + boxW + (int) Math.round(10 * scale) : boxX - (int) Math.round(10 * scale);
+		String valueText = String.format("%4d", value);
+		FontMetrics metrics = bGraphics.getFontMetrics();
+		int padX = (int) Math.max(3, Math.round(3 * scale));
+		int padY = (int) Math.max(2, Math.round(2 * scale));
+		int boxW = metrics.stringWidth("0000") + padX * 2;
+		int boxH = metrics.getAscent() + metrics.getDescent() + padY * 2;
+		int tickOuterX = leftSide ? centerX + (int) Math.round(10 * scale) : centerX - (int) Math.round(10 * scale);
 		int tickInnerX = leftSide ? tickOuterX - (int) Math.round(8 * scale) : tickOuterX + (int) Math.round(8 * scale);
+		int boxGap = (int) Math.max(3, Math.round(4 * scale));
+		int boxX = leftSide ? tickInnerX - boxGap - boxW : tickInnerX + boxGap;
 		int pixelsPerStep = (int) Math.round(8 * scale);
+		int textBaseY = centerY + (metrics.getAscent() - metrics.getDescent()) / 2;
+		int textX = boxX + boxW - padX - metrics.stringWidth(valueText);
 
 		bGraphics.setColor(color);
 		bGraphics.drawString(label, boxX + 2, topY - 6);
 		bGraphics.drawRect(boxX, centerY - boxH / 2, boxW, boxH);
-		bGraphics.drawString(String.format("%3d", value), boxX + 4, centerY + 5);
+		bGraphics.drawString(valueText, textX, textBaseY);
 
 		int firstTick = (int) Math.floor((double) (value - range) / step) * step;
 		int lastTick = (int) Math.ceil((double) (value + range) / step) * step;
@@ -751,6 +767,7 @@ public class Jflight extends Applet3D implements Runnable {
 			return;
 		Plane player = plane[0];
 		double radius = 44.0 * hudScale();
+		double arrowScale = hudScale() * Commons.HUD_ENEMY_ARROW_SCALE;
 		CVector3 screen = new CVector3();
 		CVector3 rel = new CVector3();
 		CVector3 local = new CVector3();
@@ -781,12 +798,12 @@ public class Jflight extends Applet3D implements Runnable {
 
 			int tipX = (int) Math.round(sCenterX + dirX * radius);
 			int tipY = (int) Math.round(sCenterY + dirY * radius);
-			int baseX = (int) Math.round(sCenterX + dirX * (radius - 8 * hudScale()));
-			int baseY = (int) Math.round(sCenterY + dirY * (radius - 8 * hudScale()));
-			int leftX = (int) Math.round(baseX - dirY * 4 * hudScale());
-			int leftY = (int) Math.round(baseY + dirX * 4 * hudScale());
-			int rightX = (int) Math.round(baseX + dirY * 4 * hudScale());
-			int rightY = (int) Math.round(baseY - dirX * 4 * hudScale());
+			int baseX = (int) Math.round(sCenterX + dirX * (radius - 8 * arrowScale));
+			int baseY = (int) Math.round(sCenterY + dirY * (radius - 8 * arrowScale));
+			int leftX = (int) Math.round(baseX - dirY * 4 * arrowScale);
+			int leftY = (int) Math.round(baseY + dirX * 4 * arrowScale);
+			int rightX = (int) Math.round(baseX + dirY * 4 * arrowScale);
+			int rightY = (int) Math.round(baseY - dirX * 4 * arrowScale);
 
 			bGraphics.setColor(COLOR_ORANGE);
 			bGraphics.fillPolygon(new Polygon(new int[] { tipX, leftX, rightX }, new int[] { tipY, leftY, rightY }, 3));
@@ -797,23 +814,25 @@ public class Jflight extends Applet3D implements Runnable {
 		if (bGraphics == null)
 			return;
 		double scale = hudScale();
+		double centerCrossScale = scale * Commons.HUD_CENTER_CROSS_SCALE;
+		double reticleScale = scale * Commons.HUD_RETICLE_SCALE;
 		if (uiReticleVisible) {
-			int reticleRadius = (int) Math.round(8 * scale);
+			int reticleRadius = (int) Math.round(8 * reticleScale);
+			int centerCrossRadius = (int) Math.round(3 * centerCrossScale);
+			int centerCrossArm = (int) Math.round(6 * centerCrossScale);
+			int reticleArm = (int) Math.round(14 * reticleScale);
 
 			bGraphics.setColor(COLOR_DARK_GREY);
-			bGraphics.drawOval(sCenterX - 3, sCenterY - 3, 6, 6);
-			bGraphics.drawLine(sCenterX - (int) Math.round(6 * scale), sCenterY,
-					sCenterX + (int) Math.round(6 * scale), sCenterY);
-			bGraphics.drawLine(sCenterX, sCenterY - (int) Math.round(6 * scale), sCenterX,
-					sCenterY + (int) Math.round(6 * scale));
+			bGraphics.drawLine(sCenterX - centerCrossArm, sCenterY, sCenterX + centerCrossArm, sCenterY);
+			bGraphics.drawLine(sCenterX, sCenterY - centerCrossArm, sCenterX, sCenterY + centerCrossArm);
 
 			int gunX = sCenterX + (int) Math.round(player.gunX * 0.36 * scale);
 			int gunY = sCenterY - (int) Math.round((player.gunY - 20.0) * 0.36 * scale);
 			Color reticleColor = autoFlight ? Color.yellow : COLOR_CYAN;
 			bGraphics.setColor(reticleColor);
 			bGraphics.drawOval(gunX - reticleRadius, gunY - reticleRadius, reticleRadius * 2, reticleRadius * 2);
-			bGraphics.drawLine(gunX - (int) Math.round(14 * scale), gunY, gunX + (int) Math.round(14 * scale), gunY);
-			bGraphics.drawLine(gunX, gunY - (int) Math.round(14 * scale), gunX, gunY + (int) Math.round(14 * scale));
+			bGraphics.drawLine(gunX - reticleArm, gunY, gunX + reticleArm, gunY);
+			bGraphics.drawLine(gunX, gunY - reticleArm, gunX, gunY + reticleArm);
 			bGraphics.drawOval(gunX - 2, gunY - 2, 4, 4);
 		}
 
@@ -843,11 +862,11 @@ public class Jflight extends Applet3D implements Runnable {
 
 		if (chromeVisible && uiHeaderVisible) {
 			bGraphics.setColor(Color.green);
-			bGraphics.drawString("NekoFlight4j", (int) Math.round(8 * scale), (int) Math.round(16 * scale));
+			bGraphics.drawString("NekoFlight4j", (int) Math.round(4 * scale), (int) Math.round(8 * scale));
 			String right = "PC HUD";
 			FontMetrics metrics = bGraphics.getFontMetrics();
-			bGraphics.drawString(right, sWidth - metrics.stringWidth(right) - (int) Math.round(8 * scale),
-					(int) Math.round(16 * scale));
+			bGraphics.drawString(right, sWidth - metrics.stringWidth(right) - (int) Math.round(4 * scale),
+					(int) Math.round(8 * scale));
 		}
 
 		if (uiSpeedVisible)
@@ -858,15 +877,24 @@ public class Jflight extends Applet3D implements Runnable {
 					(int) Math.round(player.height), 100, 500, 400, false, "ALT", COLOR_GREEN_YELLOW);
 
 		if (uiTargetVisible && player.targetDis > 0.0) {
-			int panelW = (int) Math.round(52 * scale);
-			int panelH = (int) Math.round(28 * scale);
+			FontMetrics metrics = bGraphics.getFontMetrics();
+			String targetText = Integer.toString((int) Math.round(player.targetDis));
+			int padX = (int) Math.max(4, Math.round(4 * scale));
+			int topPad = (int) Math.max(3, Math.round(3 * scale));
+			int bottomPad = (int) Math.max(3, Math.round(3 * scale));
+			int lineGap = (int) Math.max(0, Math.round(1 * scale));
+			int textW = Math.max(metrics.stringWidth("TGT"), metrics.stringWidth(targetText));
+			int panelW = textW + padX * 2;
+			int panelH = metrics.getAscent() * 2 + topPad + bottomPad + lineGap;
 			int panelX = sWidth - panelW - (int) Math.round(16 * scale);
 			int panelY = (int) Math.round(32 * scale);
+			int textX = panelX + padX;
+			int labelBaseY = panelY + topPad + metrics.getAscent();
+			int valueBaseY = labelBaseY + metrics.getAscent() + lineGap;
 			drawHudPanel(panelX, panelY, panelW, panelH, COLOR_ORANGE);
 			bGraphics.setColor(COLOR_ORANGE);
-			bGraphics.drawString("TGT", panelX + (int) Math.round(6 * scale), panelY + (int) Math.round(12 * scale));
-			bGraphics.drawString(Integer.toString((int) Math.round(player.targetDis)),
-					panelX + (int) Math.round(6 * scale), panelY + (int) Math.round(24 * scale));
+			bGraphics.drawString("TGT", textX, labelBaseY);
+			bGraphics.drawString(targetText, textX, valueBaseY);
 		}
 
 		if (chromeVisible && uiFooterVisible) {

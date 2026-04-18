@@ -818,6 +818,9 @@ public class Plane {
 			}
 			gunVx += xx;
 			gunVy -= yy;
+		} else {
+			gunVx += (-gunX) * 0.08;
+			gunVy += (20.0 - gunY) * 0.08;
 		}
 		gunX += gunVx * 100 / 300;
 		gunY += gunVy * 100 / 300;

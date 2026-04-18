@@ -24,6 +24,7 @@ public class Applet3D extends JPanel {
 	public BufferedImage backImage = null;
 	int bWidth, bHeight;
 	protected Graphics2D bGraphics = null;
+	protected final Object renderLock = new Object();
 
 	public boolean keyShoot;
 	public boolean keyLeft;
@@ -65,37 +66,45 @@ public class Applet3D extends JPanel {
 	}
 
 	public void bgInit() {
-		backImage = new BufferedImage(sWidth, sHeight, BufferedImage.TYPE_INT_RGB);
-		bWidth = sWidth;
-		bHeight = sHeight;
-		if (bGraphics != null)
-			bGraphics.dispose();
-		bGraphics = backImage.createGraphics();
-		bGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		bGraphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		synchronized (renderLock) {
+			backImage = new BufferedImage(sWidth, sHeight, BufferedImage.TYPE_INT_RGB);
+			bWidth = sWidth;
+			bHeight = sHeight;
+			if (bGraphics != null)
+				bGraphics.dispose();
+			bGraphics = backImage.createGraphics();
+			bGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			bGraphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		}
 	}
 
 	public void clear() {
-		if (backImage == null || bWidth != sWidth || bHeight != sHeight)
-			bgInit();
-		if (bGraphics != null) {
-			bGraphics.setColor(Color.black);
-			bGraphics.fillRect(0, 0, bWidth, bHeight);
+		synchronized (renderLock) {
+			if (backImage == null || bWidth != sWidth || bHeight != sHeight)
+				bgInit();
+			if (bGraphics != null) {
+				bGraphics.setColor(Color.black);
+				bGraphics.fillRect(0, 0, bWidth, bHeight);
+			}
 		}
 	}
 
 	public void flush() {
-		if (backImage == null || bWidth != sWidth || bHeight != sHeight)
-			bgInit();
+		synchronized (renderLock) {
+			if (backImage == null || bWidth != sWidth || bHeight != sHeight)
+				bgInit();
+		}
 		repaint();
 	}
 
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		if (backImage == null || bWidth != sWidth || bHeight != sHeight)
-			bgInit();
-		g.drawImage(backImage, 0, 0, null);
+		synchronized (renderLock) {
+			if (backImage == null || bWidth != sWidth || bHeight != sHeight)
+				bgInit();
+			g.drawImage(backImage, 0, 0, null);
+		}
 	}
 
 	public void change3d(Plane plane, CVector3 sp, CVector3 cp) {
@@ -206,7 +215,9 @@ public class Applet3D extends JPanel {
 		sHeight = getSize().height;
 		sCenterX = sWidth / 2;
 		sCenterY = sHeight / 2;
-		bgInit();
+		synchronized (renderLock) {
+			bgInit();
+		}
 	}
 
 	void this_keyPressed(KeyEvent e) {

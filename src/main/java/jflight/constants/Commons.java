@@ -10,5 +10,8 @@ public interface Commons {
 	double RUDDER_DEFLECTION_DEG = 10.0;
 	int FRAME_INTERVAL_MS = 33;
 	double CAMERA_SCALE = 42.0;
+	double HUD_CENTER_CROSS_SCALE = 0.5;
+	double HUD_RETICLE_SCALE = 0.25;
+	double HUD_ENEMY_ARROW_SCALE = 0.5;
 
 }
